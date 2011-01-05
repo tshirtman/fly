@@ -45,6 +45,10 @@ class MovePatern(object):
             reversed(self.vectors)
         ))[0][1]
 
+class Bonus(Entity):
+    def __init__(self, category):
+        pass
+
 class Entity(object):
     def __init__(self, x, y, skin):
         self.x = x
