@@ -24,6 +24,7 @@
 import os, sys, copy
 import pygame
 import logging
+import math
 
 try:
     from pygame.locals import BLEND_MAX
@@ -68,8 +69,8 @@ def image(name, *args, **kwargs):
     if 'reversed' in kwargs and kwargs['reversed']:
         kwargs['reversed'] = False
         #logging.debug("reverse "+name)
-        image = pygame.transform.flip(
-            loaders.image(name,*args, **kwargs)[0],
+        img = pygame.transform.flip(
+            image(name,*args, **kwargs)[0],
             True, #flip horizontaly
             False #not verticaly
             )
@@ -77,9 +78,9 @@ def image(name, *args, **kwargs):
     elif 'lighten' in kwargs and kwargs['lighten']:
         #logging.debug('lightened: '+name)
         kwargs['lighten'] = False
-        image = loaders.image(name, *args, **kwargs)[0].copy()
+        img = image(name, *args, **kwargs)[0].copy()
         if BLEND_MAX is not None:
-            image.fill(
+            img.fill(
                     pygame.Color('lightgrey'),
                     None,
                     BLEND_MAX
@@ -98,13 +99,13 @@ def image(name, *args, **kwargs):
         scale = kwargs['scale']
         kwargs['scale'] = None
         if config.general['SMOOTHSCALE']:
-            image = pygame.transform.smoothscale(
-                loaders.image(name, *args, **kwargs)[0],
+            img = pygame.transform.smoothscale(
+                image(name, *args, **kwargs)[0],
                 scale
                 )
         else:
-            image = pygame.transform.scale(
-                loaders.image(name, *args, **kwargs)[0],
+            img = pygame.transform.scale(
+                image(name, *args, **kwargs)[0],
                 scale
                 )
 
@@ -114,41 +115,39 @@ def image(name, *args, **kwargs):
         kwargs['zoom'] = None
         #logging.debug('scaling image '+name+' :'+str(zoom))
         if config.general['SMOOTHSCALE']:
-            image = pygame.transform.smoothscale(
-                    loaders.image(name, **kwargs)[0],
+            img = pygame.transform.smoothscale(
+                    image(name, **kwargs)[0],
                     (
-                     int(loaders.image(name, *args, **kwargs)[1][2]*zoom),
-                     int(loaders.image(name, *args, **kwargs)[1][3]*zoom)
+                     int(image(name, *args, **kwargs)[1][2]*zoom),
+                     int(image(name, *args, **kwargs)[1][3]*zoom)
                     )
                     )
         else:
-            image = pygame.transform.scale(
-                    loaders.image(name, **kwargs)[0],
+            img = pygame.transform.scale(
+                    image(name, **kwargs)[0],
                     (
-                     int(loaders.image(name, *args, **kwargs)[1][2]*zoom),
-                     int(loaders.image(name, *args, **kwargs)[1][3]*zoom)
+                     int(image(name, *args, **kwargs)[1][2]*zoom),
+                     int(image(name, *args, **kwargs)[1][3]*zoom)
                     )
                     )
 
     elif 'rotate' in kwargs and kwargs['rotate'] not in (None, 0):
         angle = kwargs['rotate']
         kwargs['rotate'] = None
-        img = pygame.transform.rotate(image(name, **kwargs)[0], angle)
+        img = pygame.transform.rotate(image(name, **kwargs)[0], angle *180/math.pi)
 
     else:
         try:
-            image = pygame.image.load(name)
+            img = pygame.image.load(name)
         except pygame.error, message:
             logging.debug('Cannot load image:'+str(name), 2)
             raise# SystemExit, message
         if 'colorkey' not in kwargs or kwargs['colorkey'] is None:
-            image = image.convert_alpha()
+            img = img.convert_alpha()
         if 'colorkey' in kwargs and kwargs['colorkey'] is not None:
-            image = image.convert()
-            if colorkey is -1:
-                colorkey = image.get_at((0,0))
-            image.set_colorkey(colorkey, RLEACCEL)
-    return image, image.get_rect()
+            img = img.convert()
+            img.set_colorkey(colorkey, RLEACCEL)
+    return img, img.get_rect()
 
 @memoize
 def image_layer(first, second, pos=(0,0)):
