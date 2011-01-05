@@ -49,7 +49,7 @@ class Entity(object):
     def __init__(self, x, y, skin):
         self.x = x
         self.y = y
-        self.skin = ""
+        self.skin = skin
 
     def collide(self, entity):
         return pygame.Rect(
@@ -66,6 +66,10 @@ class Enemy(Entity):
         self.movepattern = movepattern
         self.skin = skin
         self.time = 0
+        self.life = 10
+
+    def hit(self, points):
+        self.life -= points
 
     def update(self, deltatime):
         self.time += deltatime
@@ -77,11 +81,9 @@ class Enemy(Entity):
 
 class Bullet(Entity):
     def __init__(self, x, y, angle):
-        self.x = x
-        self.y = y
+        Entity.__init__(self, x, y, 'bullet.png')
         self.angle = angle
         self.speed = 11
-        self.skin = 'bullet.png'
 
     def update(self, deltatime):
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
@@ -204,7 +206,10 @@ def main():
             enemy.update(deltatime)
             for bullet in plane.bullets:
                 if bullet.collide(enemy):
-                    enemies_to_remove.add(enemy)
+                    enemy.hit(1)
+                    if enemy.life <= 0:
+                        enemies_to_remove.add(enemy)
+
                     bullets_to_remove.add(bullet)
         plane.bullets.difference_update(bullets_to_remove)
         enemies.difference_update(enemies_to_remove)
