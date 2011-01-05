@@ -64,7 +64,7 @@ class Enemy(Entity):
         self.y += self.movepattern.get_vector(self.time)[1] * deltatime
 
     def display(self, screen):
-        screen.blit( loaders.image( self.skin)[0], (self.x, 480-self.y))
+        screen.blit( loaders.image( self.skin)[0], (self.x, self.y))
 
 class Bullet(Entity):
     def __init__(self, x, y, angle):
@@ -84,7 +84,7 @@ class Bullet(Entity):
                 self.skin,
                 rotate=self.angle*5
             )[0],
-            (self.x, 480-self.y)
+            (self.x, self.y)
         )
 
 class Plane(Entity):
@@ -98,16 +98,16 @@ class Plane(Entity):
         self.skin = 'plane.png'
 
     def up(self, deltatime):
-        self.angle += angle_incr * deltatime
-
-    def down(self, deltatime):
         self.angle -= angle_incr * deltatime
 
+    def down(self, deltatime):
+        self.angle += angle_incr * deltatime
+
     def aim_up(self, deltatime):
-        self.aim_angle += angle_incr * deltatime
+        self.aim_angle -= angle_incr * deltatime
 
     def aim_down(self, deltatime):
-        self.aim_angle -= angle_incr * deltatime
+        self.aim_angle += angle_incr * deltatime
 
     def fire(self):
         self.bullets.add(Bullet(self.x, self.y, self.angle + self.aim_angle))
@@ -121,11 +121,11 @@ class Plane(Entity):
                 self.skin,
                 rotate=self.angle*5
             )[0],
-            (self.x, 480-self.y)
+            (self.x, self.y)
         )
 
     def update(self, deltatime):
-        self.angle -= angle_incr/5 * deltatime
+        self.angle += angle_incr/5 * deltatime
         self.angle = max(-500 * angle_incr, min(2000 * angle_incr, self.angle))
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
         self.y += (math.sin(self.angle) * self.speed) * deltatime
@@ -142,11 +142,15 @@ class Plane(Entity):
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800,480))
+    screen = pygame.display.set_mode((800, 480))
     quit = False
     plane = Plane()
     enemies = set()
+    enemies.add(Enemy(500, 300, MovePatern('default'), 'enemy1.png'))
+    enemies.add(Enemy(600, 300, MovePatern('default'), 'enemy1.png'))
     enemies.add(Enemy(500, 100, MovePatern('default'), 'enemy1.png'))
+    enemies.add(Enemy(600, 100, MovePatern('default'), 'enemy1.png'))
+    enemies.add(Enemy(550, 200, MovePatern('default'), 'enemy1.png'))
 
     clock = pygame.time.Clock()
     while not quit:
