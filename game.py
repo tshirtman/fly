@@ -21,14 +21,23 @@ class Level(object):
 class MovePatern(object):
     def __init__(self, name):
         self.name = name
-        self.duration = 8000
 
-        self.vectors=[
-            (0, (-.1, 0)),
-            (2000, (0, .1)),
-            (4000, (.1, 0)),
-            (6000, (0, -.1)),
-        ]
+        if name == 'square':
+            self.duration = 8000
+            self.vectors=[
+                (0, (-.1, 0)),
+                (2000, (0, .1)),
+                (4000, (.05, 0)),
+                (6000, (0, -.1)),
+            ]
+
+        elif name == 'down':
+            self.duration = 6000
+            self.vectors=[
+                (0, (-.1, 0)),
+                (2000, (-.1, .1)),
+                (4000, (0, -.1)),
+            ]
 
     def get_vector(self, t):
         return list(itertools.dropwhile(
@@ -82,7 +91,7 @@ class Bullet(Entity):
         screen.blit(
             loaders.image(
                 self.skin,
-                rotate=self.angle*5
+                rotate=-self.angle*5
             )[0],
             (self.x, self.y)
         )
@@ -119,7 +128,7 @@ class Plane(Entity):
         screen.blit(
             loaders.image(
                 self.skin,
-                rotate=self.angle*5
+                rotate=-self.angle*5
             )[0],
             (self.x, self.y)
         )
@@ -146,11 +155,14 @@ def main():
     quit = False
     plane = Plane()
     enemies = set()
-    enemies.add(Enemy(500, 300, MovePatern('default'), 'enemy1.png'))
-    enemies.add(Enemy(600, 300, MovePatern('default'), 'enemy1.png'))
-    enemies.add(Enemy(500, 100, MovePatern('default'), 'enemy1.png'))
-    enemies.add(Enemy(600, 100, MovePatern('default'), 'enemy1.png'))
-    enemies.add(Enemy(550, 200, MovePatern('default'), 'enemy1.png'))
+    enemies.add(Enemy(500, 300, MovePatern('square'), 'enemy1.png'))
+    enemies.add(Enemy(600, 300, MovePatern('square'), 'enemy1.png'))
+    enemies.add(Enemy(500, 100, MovePatern('square'), 'enemy1.png'))
+    enemies.add(Enemy(600, 100, MovePatern('square'), 'enemy1.png'))
+    enemies.add(Enemy(550, 200, MovePatern('square'), 'enemy1.png'))
+
+    enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy1.png'))
+    enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
 
     clock = pygame.time.Clock()
     while not quit:
