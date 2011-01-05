@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8
+import os
 import math
+import itertools
 import pygame
 from pygame.locals import *
 
@@ -8,6 +10,35 @@ import loaders
 
 scrolling_speed = 10
 angle_incr = 0.0001
+
+class Level(object):
+    def __init__(self, levelname):
+        with open(os.path.join("levels",levelname)) as level:
+            for line in level.readlines():
+                if line.split(':')[0] == '':
+                    level.append()
+
+class MovePatern(object):
+    def __init__(self, name):
+        self.name = name
+
+    def get_vector(self, t):
+        return itertools.dropwhile(lambda x: x[0]>t, reversed(self.vectors))[0]
+
+class Enemy(object):
+    def __init__(self, x, y, movepattern, skin):
+        self.x = x
+        self.y = y
+        self.movepattern = movepattern
+        self.skin = skin
+
+    def update(self):
+        #TODO
+        pass
+
+    def display(self, screen):
+        #TODO
+        pass
 
 class Bullet(object):
     def __init__(self, x, y, angle):
@@ -70,7 +101,6 @@ class Plane(object):
         self.angle = max(-500 * angle_incr, min(2000 * angle_incr, self.angle))
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
         self.y += (math.sin(self.angle) * self.speed) * deltatime
-        #print self.x, self.y
         self.x = max(0, min(800, self.x))
         self.y = max(0, min(480, self.y))
 
