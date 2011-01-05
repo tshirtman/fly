@@ -21,31 +21,58 @@ class Level(object):
 class MovePatern(object):
     def __init__(self, name):
         self.name = name
+        self.duration = 8000
+
+        self.vectors=[
+            (0, (-.1, 0)),
+            (2000, (0, .1)),
+            (4000, (.1, 0)),
+            (6000, (0, -.1)),
+        ]
 
     def get_vector(self, t):
-        return itertools.dropwhile(lambda x: x[0]>t, reversed(self.vectors))[0]
+        return list(itertools.dropwhile(
+            lambda x: x[0] > (t %self.duration),
+            reversed(self.vectors)
+        ))[0][1]
 
-class Enemy(object):
-    def __init__(self, x, y, movepattern, skin):
+class Entity(object):
+    def __init__(self, x, y, skin):
         self.x = x
         self.y = y
+        self.skin = ""
+
+    def collide(self, entity):
+        return pygame.Rect(
+            (self.x, self.y), loaders.image(self.skin)[1][2:]
+            ).colliderect(
+            pygame.Rect(
+                (entity.x, entity.y), loaders.image(entity.skin)[1][2:]
+            )
+        )
+
+class Enemy(Entity):
+    def __init__(self, x, y, movepattern, skin):
+        Entity.__init__(self, x, y, skin)
         self.movepattern = movepattern
         self.skin = skin
+        self.time = 0
 
-    def update(self):
-        #TODO
-        pass
+    def update(self, deltatime):
+        self.time += deltatime
+        self.x += self.movepattern.get_vector(self.time)[0] * deltatime
+        self.y += self.movepattern.get_vector(self.time)[1] * deltatime
 
     def display(self, screen):
-        #TODO
-        pass
+        screen.blit( loaders.image( self.skin)[0], (self.x, 480-self.y))
 
-class Bullet(object):
+class Bullet(Entity):
     def __init__(self, x, y, angle):
         self.x = x
         self.y = y
         self.angle = angle
         self.speed = 11
+        self.skin = 'bullet.png'
 
     def update(self, deltatime):
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
@@ -54,13 +81,13 @@ class Bullet(object):
     def display(self, screen):
         screen.blit(
             loaders.image(
-                'bullet.png',
+                self.skin,
                 rotate=self.angle*5
             )[0],
             (self.x, 480-self.y)
         )
 
-class Plane(object):
+class Plane(Entity):
     def __init__(self):
         self.speed = 10
         self.x = 100
@@ -68,6 +95,7 @@ class Plane(object):
         self.angle = 0
         self.aim_angle = 0
         self.bullets = set()
+        self.skin = 'plane.png'
 
     def up(self, deltatime):
         self.angle += angle_incr * deltatime
@@ -90,7 +118,7 @@ class Plane(object):
 
         screen.blit(
             loaders.image(
-                'plane.png',
+                self.skin,
                 rotate=self.angle*5
             )[0],
             (self.x, 480-self.y)
@@ -117,6 +145,9 @@ def main():
     screen = pygame.display.set_mode((800,480))
     quit = False
     plane = Plane()
+    enemies = set()
+    enemies.add(Enemy(500, 100, MovePatern('default'), 'enemy1.png'))
+
     clock = pygame.time.Clock()
     while not quit:
         deltatime = clock.tick()
@@ -150,10 +181,23 @@ def main():
 
         # update
         plane.update(deltatime)
+        enemies_to_remove = set()
+        bullets_to_remove = set()
+
+        for enemy in enemies:
+            enemy.update(deltatime)
+            for bullet in plane.bullets:
+                if bullet.collide(enemy):
+                    enemies_to_remove.add(enemy)
+                    bullets_to_remove.add(bullet)
+        plane.bullets.difference_update(bullets_to_remove)
+        enemies.difference_update(enemies_to_remove)
 
         # display
         screen.fill(pygame.Color('white'))
         plane.display(screen)
+        for i in enemies:
+            i.display(screen)
         pygame.display.flip()
 
 if __name__ == '__main__':
