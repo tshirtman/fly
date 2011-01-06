@@ -12,11 +12,33 @@ scrolling_speed = 10
 angle_incr = 0.0001
 
 class Level(object):
-    def __init__(self, levelname):
-        with open(os.path.join("levels",levelname)) as level:
-            for line in level.readlines():
-                if line.split(':')[0] == '':
-                    level.append()
+    def __init__(self, num):
+        self.x = 0
+        self.background = 'lvl1_background.png'
+        self.foreground = 'lvl1_foreground.png'
+        self.blocs = [
+            pygame.Rect(800, 200, 200, 200),
+            pygame.Rect(800, 600, 200, 200),
+            pygame.Rect(1000, 200, 200, 200),
+            pygame.Rect(1000, 600, 200, 200),
+        ]
+
+        self.enemies = set()
+        self.enemies.add(Enemy(500, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(600, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(500, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(600, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(550, 200, MovePatern('square'), 'enemy1.png'))
+
+        self.enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
+
+    def update(self, deltatime):
+        self.x += scrolling_speed * deltatime
+        pass
+
+    def display(self, screen):
+        pass
 
 class MovePatern(object):
     def __init__(self, name):
@@ -60,6 +82,15 @@ class Entity(object):
             )
         )
 
+    def display(self, screen):
+        screen.blit(
+            loaders.image(
+                self.skin,
+                rotate=-self.angle*5
+            )[0],
+            (self.x, self.y)
+        )
+
 class Bonus(Entity):
     def __init__(self, category):
         pass
@@ -71,6 +102,7 @@ class Enemy(Entity):
         self.skin = skin
         self.time = 0
         self.life = 10
+        self.angle = 0
 
     def hit(self, points):
         self.life -= points
@@ -79,9 +111,6 @@ class Enemy(Entity):
         self.time += deltatime
         self.x += self.movepattern.get_vector(self.time)[0] * deltatime
         self.y += self.movepattern.get_vector(self.time)[1] * deltatime
-
-    def display(self, screen):
-        screen.blit( loaders.image( self.skin)[0], (self.x, self.y))
 
 class Bullet(Entity):
     def __init__(self, x, y, angle):
@@ -93,14 +122,6 @@ class Bullet(Entity):
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
         self.y += (math.sin(self.angle)*self.speed) * deltatime
 
-    def display(self, screen):
-        screen.blit(
-            loaders.image(
-                self.skin,
-                rotate=-self.angle*5
-            )[0],
-            (self.x, self.y)
-        )
 
 class Plane(Entity):
     def __init__(self):
@@ -130,14 +151,7 @@ class Plane(Entity):
     def display(self, screen):
         for bullet in self.bullets:
             bullet.display(screen)
-
-        screen.blit(
-            loaders.image(
-                self.skin,
-                rotate=-self.angle*5
-            )[0],
-            (self.x, self.y)
-        )
+        Entity.display(self, screen)
 
     def update(self, deltatime):
         self.angle += angle_incr/5 * deltatime
@@ -160,15 +174,7 @@ def main():
     screen = pygame.display.set_mode((800, 480))
     quit = False
     plane = Plane()
-    enemies = set()
-    enemies.add(Enemy(500, 300, MovePatern('square'), 'enemy1.png'))
-    enemies.add(Enemy(600, 300, MovePatern('square'), 'enemy1.png'))
-    enemies.add(Enemy(500, 100, MovePatern('square'), 'enemy1.png'))
-    enemies.add(Enemy(600, 100, MovePatern('square'), 'enemy1.png'))
-    enemies.add(Enemy(550, 200, MovePatern('square'), 'enemy1.png'))
-
-    enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy1.png'))
-    enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
+    level = Level(1)
 
     clock = pygame.time.Clock()
     while not quit:
@@ -203,10 +209,11 @@ def main():
 
         # update
         plane.update(deltatime)
+        level.update(deltatime)
         enemies_to_remove = set()
         bullets_to_remove = set()
 
-        for enemy in enemies:
+        for enemy in level.enemies:
             enemy.update(deltatime)
             for bullet in plane.bullets:
                 if bullet.collide(enemy):
@@ -216,12 +223,13 @@ def main():
 
                     bullets_to_remove.add(bullet)
         plane.bullets.difference_update(bullets_to_remove)
-        enemies.difference_update(enemies_to_remove)
+        level.enemies.difference_update(enemies_to_remove)
 
         # display
         screen.fill(pygame.Color('white'))
+        level.display(screen)
         plane.display(screen)
-        for i in enemies:
+        for i in level.enemies:
             i.display(screen)
         pygame.display.flip()
 
