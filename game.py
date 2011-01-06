@@ -13,14 +13,15 @@ angle_incr = 0.0001
 
 class Level(object):
     def __init__(self, num):
+        self.debug = True
         self.x = 0
         self.background = 'lvl1_background.png'
         self.foreground = 'lvl1_foreground.png'
         self.blocs = [
-            pygame.Rect(800, 200, 200, 200),
-            pygame.Rect(800, 600, 200, 200),
-            pygame.Rect(1000, 200, 200, 200),
-            pygame.Rect(1000, 600, 200, 200),
+            pygame.Rect(800, 200, 20, 20),
+            pygame.Rect(800, 600, 20, 20),
+            pygame.Rect(1000, 200, 20, 20),
+            pygame.Rect(1000, 600, 20, 20),
         ]
 
         self.enemies = set()
@@ -35,12 +36,20 @@ class Level(object):
 
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
-        pass
+
+    def collide(self, rect):
+        return rect.move(self.x, 0).collidelist(self.blocs) != -1
 
     def display(self, screen):
         screen.blit(loaders.image(self.background)[0], (0, 0))
         img = loaders.image(self.foreground)
         screen.blit(img[0], (-self.x, 480 - img[1][3]))
+        if self.debug:
+            for i in self.blocs:
+                screen.fill(
+                    pygame.Color('blue'),
+                    pygame.Rect(i[0]-self.x, i[1], i[2], i[3])
+                )
 
 class MovePatern(object):
     def __init__(self, name):
@@ -138,6 +147,9 @@ class Plane(Entity):
     def up(self, deltatime):
         self.angle -= angle_incr * deltatime
 
+    def pos_rect(self):
+        return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
+
     def down(self, deltatime):
         self.angle += angle_incr * deltatime
 
@@ -214,6 +226,9 @@ def main():
         level.update(deltatime)
         enemies_to_remove = set()
         bullets_to_remove = set()
+
+        if level.collide(plane.pos_rect()):
+            break
 
         for enemy in level.enemies:
             enemy.update(deltatime)
