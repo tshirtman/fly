@@ -34,11 +34,13 @@ class Level(object):
         self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
 
     def update(self, deltatime):
-        self.x += scrolling_speed * deltatime
+        self.x += scrolling_speed/100.0 * deltatime
         pass
 
     def display(self, screen):
-        pass
+        screen.blit(loaders.image('lvl1_background.png')[0], (0, 0))
+        img = loaders.image('lvl1_foreground.png')
+        screen.blit(img[0], (-self.x, 480 - img[1][3]))
 
 class MovePatern(object):
     def __init__(self, name):
