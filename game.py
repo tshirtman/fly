@@ -45,10 +45,6 @@ class MovePatern(object):
             reversed(self.vectors)
         ))[0][1]
 
-class Bonus(Entity):
-    def __init__(self, category):
-        pass
-
 class Entity(object):
     def __init__(self, x, y, skin):
         self.x = x
@@ -63,6 +59,10 @@ class Entity(object):
                 (entity.x, entity.y), loaders.image(entity.skin)[1][2:]
             )
         )
+
+class Bonus(Entity):
+    def __init__(self, category):
+        pass
 
 class Enemy(Entity):
     def __init__(self, x, y, movepattern, skin):
