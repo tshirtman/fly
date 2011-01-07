@@ -37,8 +37,19 @@ class Level(object):
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
 
-    def collide(self, rect):
-        return rect.move(self.x, 0).collidelist(self.blocs) != -1
+    def collide(self, plane):
+        if plane.pos_rect().move(self.x, 0).collidelist(self.blocs) != -1:
+            for b in self.blocs:
+                clipped = plane.pos_rect().move(self.x, 0).clip(b)
+                if clipped.width:#if width = 0 then heigh too
+                    for x in range(clipped.width):
+                        for y in range(clipped.height):
+                            if loaders.image(
+                                plane.skin,
+                                rotate=plane.angle
+                            )[0].get_at((x,y)) != (255,255,255,0):
+                                return True
+        return False
 
     def display(self, screen):
         screen.blit(loaders.image(self.background)[0], (0, 0))
@@ -143,6 +154,7 @@ class Plane(Entity):
         self.aim_angle = 0
         self.bullets = set()
         self.skin = 'plane.png'
+        self.scnd_weapon = 'bomb', 1
 
     def up(self, deltatime):
         self.angle -= angle_incr * deltatime
@@ -161,6 +173,10 @@ class Plane(Entity):
 
     def fire(self):
         self.bullets.add(Bullet(self.x, self.y, self.angle + self.aim_angle))
+
+    def scnd_fire(self):
+        if self.scnd_weapon[0] == 'bomb':
+            self.bomb()
 
     def display(self, screen):
         for bullet in self.bullets:
@@ -227,8 +243,9 @@ def main():
         enemies_to_remove = set()
         bullets_to_remove = set()
 
-        if level.collide(plane.pos_rect()):
-            break
+        if level.collide(plane):
+            level = Level(1)
+            plane = Plane()
 
         for enemy in level.enemies:
             enemy.update(deltatime)
