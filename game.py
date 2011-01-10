@@ -16,7 +16,7 @@ class Level(object):
         self.debug = True
         self.x = 0
         self.background = 'lvl1_background.png'
-        self.foreground = 'lvl1_foreground.png'
+        self.foreground_base = 'lvl1_foreground_'
         self.blocs = [
             pygame.Rect(800, 200, 20, 20),
             pygame.Rect(800, 600, 20, 20),
@@ -33,6 +33,31 @@ class Level(object):
 
         self.enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy1.png'))
         self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
+
+        self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(1600, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(1500, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(1600, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(1550, 200, MovePatern('square'), 'enemy1.png'))
+
+        self.enemies.add(Enemy(1800, 100, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(1950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
+
+        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(2500, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
+        self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
+
+        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy1.png'))
 
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
@@ -53,8 +78,19 @@ class Level(object):
 
     def display(self, screen):
         screen.blit(loaders.image(self.background)[0], (0, 0))
-        img = loaders.image(self.foreground)
-        screen.blit(img[0], (-self.x, 480 - img[1][3]))
+        screen.blit(
+            loaders.image(
+                self.foreground_base+str(int(self.x/1000))+'.png'
+            )[0],
+            (-(self.x % 1000), 0)
+        )
+        screen.blit(
+            loaders.image(
+                self.foreground_base+str(int((self.x)/1000)+1)+'.png'
+            )[0],
+            (-(self.x % 1000)+1000, 0)
+        )
+
         if self.debug:
             for i in self.blocs:
                 screen.fill(
