@@ -17,12 +17,6 @@ class Level(object):
         self.x = 0
         self.background = 'lvl1_background.png'
         self.foreground_base = 'lvl1_foreground_'
-        self.blocs = [
-            pygame.Rect(800, 200, 20, 20),
-            pygame.Rect(800, 600, 20, 20),
-            pygame.Rect(1000, 200, 20, 20),
-            pygame.Rect(1000, 600, 20, 20),
-        ]
 
         self.enemies = set()
         self.enemies.add(Enemy(500, 300, MovePatern('square'), 'enemy1.png'))
@@ -63,17 +57,35 @@ class Level(object):
         self.x += scrolling_speed/100.0 * deltatime
 
     def collide(self, plane):
-        if plane.pos_rect().move(self.x, 0).collidelist(self.blocs) != -1:
-            for b in self.blocs:
-                clipped = plane.pos_rect().move(self.x, 0).clip(b)
-                if clipped.width:#if width = 0 then heigh too
-                    for x in range(clipped.width):
-                        for y in range(clipped.height):
-                            if loaders.image(
-                                plane.skin,
-                                rotate=plane.angle
-                            )[0].get_at((x,y)) != (255,255,255,0):
-                                return True
+        img = (
+            loaders.image(self.foreground_base+str(int(self.x/1000))+'.png'),
+            loaders.image(self.foreground_base+str(int(self.x/1000)+1)+'.png')
+            )
+
+        clipped = plane.pos_rect().move(self.x, 0)
+
+        for x in range(0, clipped.width, 2):
+            for y in range(0, clipped.height, 2):
+                # manage case where we are on the next tile
+                #print int(plane.x + x + (self.x % 1000)), int(plane.y + y)
+                if (plane.x +x < -(self.x % 1000)+1000):
+                    if (
+                        plane.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                        img[0][0].get_at((
+                            int(plane.x + x + (self.x % 1000)),
+                            int(plane.y + y)
+                            )) != (255, 255, 255, 0)
+                       ):
+                        return True
+                else:
+                    if (
+                        plane.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                        img[1][0].get_at((
+                            int(plane.x + x + (self.x % 1000) - 1000),
+                            int(plane.y + y)
+                            )) != (255, 255, 255, 0)
+                       ):
+                        return True
         return False
 
     def display(self, screen):
@@ -91,20 +103,13 @@ class Level(object):
             (-(self.x % 1000)+1000, 0)
         )
 
-        if self.debug:
-            for i in self.blocs:
-                screen.fill(
-                    pygame.Color('blue'),
-                    pygame.Rect(i[0]-self.x, i[1], i[2], i[3])
-                )
-
 class MovePatern(object):
     def __init__(self, name):
         self.name = name
 
         if name == 'square':
             self.duration = 8000
-            self.vectors=[
+            self.vectors = [
                 (0, (-.1, 0)),
                 (2000, (0, .1)),
                 (4000, (.05, 0)),
@@ -113,7 +118,7 @@ class MovePatern(object):
 
         elif name == 'down':
             self.duration = 6000
-            self.vectors=[
+            self.vectors = [
                 (0, (-.1, 0)),
                 (2000, (-.1, .1)),
                 (4000, (0, -.1)),
@@ -140,12 +145,15 @@ class Entity(object):
             )
         )
 
-    def display(self, screen):
-        screen.blit(
-            loaders.image(
+    def image(self):
+        return loaders.image(
                 self.skin,
                 rotate=-self.angle*5
-            )[0],
+                )
+
+    def display(self, screen):
+        screen.blit(
+            self.image()[0],
             (self.x, self.y)
         )
 
@@ -196,6 +204,7 @@ class Plane(Entity):
         self.angle -= angle_incr * deltatime
 
     def pos_rect(self):
+        """ returns the rect of the current image, at the current position """
         return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
 
     def down(self, deltatime):
