@@ -64,7 +64,7 @@ class Level(object):
 
         clipped = plane.pos_rect().move(self.x, 0)
 
-        for x in range(0, clipped.width, 8):
+        for x in range(0, clipped.width, 16):
             for y in range(0, clipped.height, 8):
                 # manage case where we are on the next tile
                 #print int(plane.x + x + (self.x % 1000)), int(plane.y + y)
