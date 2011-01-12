@@ -165,9 +165,12 @@ class Bonus(Entity):
         self.angle = 0
         self.category = category
         self.skin = 'bonus_'+category+'.png'
+        self.speed = scrolling_speed
 
     def update(self, deltatime):
         self.angle += angle_incr * deltatime
+        self.speed -= (scrolling_speed/50000.)*deltatime
+        self.x += (self.speed - scrolling_speed)*deltatime
 
 class Enemy(Entity):
     def __init__(self, x, y, movepattern, skin):
