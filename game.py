@@ -3,6 +3,7 @@
 import os
 import math
 import itertools
+import random
 import pygame
 from pygame.locals import *
 
@@ -158,8 +159,15 @@ class Entity(object):
         )
 
 class Bonus(Entity):
-    def __init__(self, category):
-        pass
+    def __init__(self, x, y, category):
+        self.x = x
+        self.y = y
+        self.angle = 0
+        self.category = category
+        self.skin = 'bonus_'+category+'.png'
+
+    def update(self, deltatime):
+        self.angle += angle_incr * deltatime
 
 class Enemy(Entity):
     def __init__(self, x, y, movepattern, skin):
@@ -250,6 +258,12 @@ def main():
     quit = False
     plane = Plane()
     level = Level(1)
+    bonuses = set()
+    bonustypes = (
+        'bomb',
+        'life',
+        'armor',
+    )
 
     clock = pygame.time.Clock()
     while not quit:
@@ -292,6 +306,9 @@ def main():
             level = Level(1)
             plane = Plane()
 
+        for bonus in bonuses:
+            bonus.update(deltatime)
+
         for enemy in level.enemies:
             enemy.update(deltatime)
             for bullet in plane.bullets:
@@ -299,6 +316,14 @@ def main():
                     enemy.hit(1)
                     if enemy.life <= 0:
                         enemies_to_remove.add(enemy)
+                        if random.randint(0,6) == 6:
+                            bonuses.add(
+                                Bonus(
+                                    enemy.x,
+                                    enemy.y,
+                                    random.choice(bonustypes)
+                                    )
+                                )
 
                     bullets_to_remove.add(bullet)
         plane.bullets.difference_update(bullets_to_remove)
@@ -308,6 +333,8 @@ def main():
         screen.fill(pygame.Color('white'))
         level.display(screen)
         plane.display(screen)
+        for i in bonuses:
+            i.display(screen)
         for i in level.enemies:
             i.display(screen)
         pygame.display.flip()
