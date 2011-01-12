@@ -309,8 +309,12 @@ def main():
             level = Level(1)
             plane = Plane()
 
+        to_remove = set()
         for bonus in bonuses:
             bonus.update(deltatime)
+            if bonus.x < 0:
+                to_remove.add(bonus)
+        bonuses.difference_update(to_remove)
 
         for enemy in level.enemies:
             enemy.update(deltatime)
