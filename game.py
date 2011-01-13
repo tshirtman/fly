@@ -337,7 +337,7 @@ def main():
         level.enemies.difference_update(enemies_to_remove)
 
         # display
-        screen.fill(pygame.Color('white'))
+        #screen.fill(pygame.Color('white'))
         level.display(screen)
         plane.display(screen)
         for i in bonuses:
