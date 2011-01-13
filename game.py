@@ -210,6 +210,7 @@ class Plane(Entity):
         self.bullets = set()
         self.skin = 'plane.png'
         self.scnd_weapon = 'bomb', 1
+        self.life = 100
 
     def up(self, deltatime):
         self.angle -= angle_incr * deltatime
@@ -306,9 +307,12 @@ def main():
         bullets_to_remove = set()
 
         if level.collide(plane):
-            level = Level(1)
-            plane = Plane()
-            bonuses = set()
+            plane.life -= 1
+            plane.y -= 10
+            if plane.life < 0:
+                level = Level(1)
+                plane = Plane()
+                bonuses = set()
 
         to_remove = set()
         for bonus in bonuses:
