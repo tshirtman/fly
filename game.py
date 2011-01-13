@@ -65,7 +65,7 @@ class Level(object):
 
         clipped = plane.pos_rect().move(self.x, 0)
 
-        for x in range(0, clipped.width, 16):
+        for x in range(0, clipped.width, 8):
             for y in range(0, clipped.height, 8):
                 # manage case where we are on the next tile
                 #print int(plane.x + x + (self.x % 1000)), int(plane.y + y)
@@ -138,13 +138,28 @@ class Entity(object):
         self.skin = skin
 
     def collide(self, entity):
-        return pygame.Rect(
+        clipped = pygame.Rect(
             (self.x, self.y), loaders.image(self.skin)[1][2:]
-            ).colliderect(
-            pygame.Rect(
-                (entity.x, entity.y), loaders.image(entity.skin)[1][2:]
-            )
-        )
+            ).clip(
+                pygame.Rect(
+                    (entity.x, entity.y),
+                    loaders.image(entity.skin)[1][2:]
+                    )
+                )
+        for x in range(clipped.width):
+            for y in range(clipped.height):
+                if (
+                    self.image()[0].get_at((
+                        clipped.x - int(self.x) + x,
+                        clipped.y - int(self.y) + y
+                        )) != (255, 255, 255, 0) and
+                    entity.image()[0].get_at((
+                        clipped.x - int(entity.x) + x,
+                        clipped.y - int(entity.y) + y
+                        )) != (255, 255, 255, 0)
+                   ):
+                    return True
+        return False
 
     def image(self):
         return loaders.image(
@@ -211,6 +226,8 @@ class Plane(Entity):
         self.skin = 'plane.png'
         self.scnd_weapon = 'bomb', 1
         self.life = 100
+        self.bombs = 0
+        self.armor = 0
 
     def up(self, deltatime):
         self.angle -= angle_incr * deltatime
@@ -256,8 +273,18 @@ class Plane(Entity):
 
         self.bullets.difference_update(to_remove)
 
+    def get_bonus(self, bonus):
+        if bonus.category == 'life':
+            self.life += 50
+        elif bonus.category == 'bomb':
+            self.bombs += 1
+        elif bonus.category == 'armor':
+            self.armor += 100
+
 def main():
     pygame.init()
+    gamefont = pygame.font.Font(pygame.font.match_font('tlwgtypist', bold=True), 18)
+
     screen = pygame.display.set_mode((800, 480))
     quit = False
     plane = Plane()
@@ -319,6 +346,10 @@ def main():
             bonus.update(deltatime)
             if bonus.x < 0:
                 to_remove.add(bonus)
+            if plane.collide(bonus):
+                plane.get_bonus(bonus)
+                to_remove.add(bonus)
+
         bonuses.difference_update(to_remove)
 
         for enemy in level.enemies:
@@ -342,13 +373,40 @@ def main():
         level.enemies.difference_update(enemies_to_remove)
 
         # display
-        #screen.fill(pygame.Color('white'))
         level.display(screen)
         plane.display(screen)
         for i in bonuses:
             i.display(screen)
         for i in level.enemies:
             i.display(screen)
+
+        screen.blit(
+                gamefont.render(
+                    str(plane.life),
+                    True,
+                    pygame.Color("red"),
+                    ),
+                (0,0)
+            )
+
+        screen.blit(
+            gamefont.render(
+                str(plane.armor),
+                True,
+                pygame.Color("red"),
+                ),
+            (0,20)
+            )
+
+        screen.blit(
+            gamefont.render(
+                str(plane.bombs),
+                True,
+                pygame.Color("red"),
+                ),
+            (0,40)
+            )
+
         pygame.display.flip()
 
 if __name__ == '__main__':
