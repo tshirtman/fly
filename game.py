@@ -244,7 +244,7 @@ class Plane(Entity):
         self.angle = max(-500 * angle_incr, min(2000 * angle_incr, self.angle))
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
         self.y += (math.sin(self.angle) * self.speed) * deltatime
-        self.x = max(0, min(800, self.x))
+        self.x = max(0, min(600, self.x))
         self.y = max(0, min(480, self.y))
 
         to_remove = set()
@@ -290,9 +290,9 @@ def main():
             plane.aim_down(deltatime)
 
         if keys[pygame.K_RIGHT]:
-            plane.speed = 10.5
+            plane.speed = 1.05 * scrolling_speed
         elif keys[pygame.K_LEFT]:
-            plane.speed = 9.5
+            plane.speed = 0.95 * scrolling_speed
         else:
             plane.speed = 10
 
@@ -308,6 +308,7 @@ def main():
         if level.collide(plane):
             level = Level(1)
             plane = Plane()
+            bonuses = set()
 
         to_remove = set()
         for bonus in bonuses:
