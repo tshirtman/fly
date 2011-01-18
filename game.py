@@ -26,8 +26,8 @@ class Level(object):
         self.enemies.add(Enemy(600, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(550, 200, MovePatern('square'), 'enemy1.png'))
 
-        self.enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy1.png'))
-        self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy2.png'))
+        self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy2.png'))
 
         self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(1600, 300, MovePatern('square'), 'enemy1.png'))
@@ -35,24 +35,24 @@ class Level(object):
         self.enemies.add(Enemy(1600, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(1550, 200, MovePatern('square'), 'enemy1.png'))
 
-        self.enemies.add(Enemy(1800, 100, MovePatern('down'), 'enemy1.png'))
-        self.enemies.add(Enemy(1950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(1800, 100, MovePatern('down'), 'enemy2.png'))
+        self.enemies.add(Enemy(1950, 200, MovePatern('down'), 'enemy2.png'))
         self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
 
-        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy1.png'))
-        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy2.png'))
+        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy2.png'))
         self.enemies.add(Enemy(2500, 300, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
         self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
 
-        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy1.png'))
-        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy1.png'))
+        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy2.png'))
+        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy2.png'))
 
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
@@ -78,6 +78,7 @@ class Level(object):
         |___.____.____.___|
 
         4*h + 4*w - 16 pixels tested, for any h and w
+
         """
         #load the two current displayed images of the level
         img = (
@@ -97,17 +98,16 @@ class Level(object):
                             img[0][0].get_at((
                                     int(entity.x + x + (self.x % 1000)),
                                     int(entity.y + y)
-                                    )) != (255, 255, 255, 0)
-                       ):
+                                    )) != (255, 255, 255, 0)):
                         return True
                     elif (
                             entity.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
                             img[1][0].get_at((
                                     int(entity.x + x + (self.x % 1000) - 1000),
                                     int(entity.y + y)
-                                    )) != (255, 255, 255, 0)
-                         ):
+                                    )) != (255, 255, 255, 0)):
                         return True
+
                 except IndexError, e:
                     #FIXME: find WHY!
                     pass
