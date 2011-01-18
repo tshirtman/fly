@@ -108,28 +108,32 @@ class Level(object):
                                     )) != (255, 255, 255, 0)
                          ):
                         return True
-                except IndexError,e:
+                except IndexError, e:
                     #FIXME: find WHY!
                     pass
 
         return False
 
     def display(self, screen):
+        """ Display the current two images chunk of the level using current x
+        """
         screen.blit(loaders.image(self.background)[0], (0, 0))
         screen.blit(
             loaders.image(
                 self.foreground_base+str(int(self.x/1000))+'.png'
             )[0],
-            (-(self.x % 1000), 0)
-        )
+            (-(self.x % 1000), 0))
+
         screen.blit(
             loaders.image(
                 self.foreground_base+str(int((self.x)/1000)+1)+'.png'
             )[0],
-            (-(self.x % 1000)+1000, 0)
-        )
+            (-(self.x % 1000)+1000, 0))
 
 class MovePatern(object):
+    """ A move patern define vectors and time associated with them, so there is
+        always a vector to follow.
+    """
     def __init__(self, name):
         self.name = name
 
@@ -139,34 +143,38 @@ class MovePatern(object):
                 (0, (-.1, 0)),
                 (2000, (0, .1)),
                 (4000, (.05, 0)),
-                (6000, (0, -.1)),
-            ]
+                (6000, (0, -.1)),]
 
         elif name == 'down':
             self.duration = 6000
             self.vectors = [
                 (0, (-.1, 0)),
                 (2000, (-.1, .1)),
-                (4000, (0, -.1)),
-            ]
+                (4000, (0, -.1)),]
 
     def get_vector(self, t):
+        """ Return the vector to use for time t
+        """
         return list(itertools.dropwhile(
             lambda x: x[0] > (t %self.duration),
-            reversed(self.vectors)
-        ))[0][1]
+            reversed(self.vectors)))[0][1]
 
 class Entity(object):
+    """ Base object to abstract various entities in the game
+    """
     def __init__(self, x, y, skin):
         self.x = x
         self.y = y
         self.skin = skin
 
     def pos_rect(self):
-        """ returns the rect of the current image, at the current position """
+        """ returns the rect of the current image, at the current position
+        """
         return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
 
     def collide(self, entity):
+        """ pixel perfect collision between two entities
+        """
         clipped = pygame.Rect(
             (self.x, self.y), loaders.image(self.skin)[1][2:]
             ).clip(
