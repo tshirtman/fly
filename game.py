@@ -58,6 +58,15 @@ class Level(object):
         self.x += scrolling_speed/100.0 * deltatime
 
     def collide(self, entity):
+        """
+        this is a pseudo pixel perfect collision detection method, to detect
+        collisions between the level and any entity
+
+        this is not a true pixel perfect system, because the number of tested
+        pixels is only proportional to the size of image, not equal to the
+        number of pixels in the image. (but tests show it's enought for our use
+        case)
+        """
         img = (
             loaders.image(self.foreground_base+str(int(self.x/1000))+'.png'),
             loaders.image(self.foreground_base+str(int(self.x/1000)+1)+'.png')
