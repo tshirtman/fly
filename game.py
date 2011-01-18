@@ -175,6 +175,7 @@ class Entity(object):
     def collide(self, entity):
         """ pixel perfect collision between two entities
         """
+        # reduce tested zone to overlap of the two rects
         clipped = pygame.Rect(
             (self.x, self.y), loaders.image(self.skin)[1][2:]
             ).clip(
@@ -186,6 +187,8 @@ class Entity(object):
 
         for x in range(clipped.width):
             for y in range(clipped.height):
+                # return true if pixels in both images at x,y in the clipping
+                # rect have a non transparent color
                 if (
                     self.image()[0].get_at((
                         clipped.x - int(self.x) + x,
@@ -200,18 +203,24 @@ class Entity(object):
         return False
 
     def image(self):
+        """ Return the image currently displayed by the engine for the entity.
+        """
         return loaders.image(
                 self.skin,
                 rotate=-self.angle*5
                 )
 
     def display(self, screen):
+        """ display the current image, at the current coordinates.
+        """
         screen.blit(
             self.image()[0],
             (self.x, self.y)
         )
 
 class Bonus(Entity):
+    """ A simple entity with a name, to act on the player when he catch them
+    """
     def __init__(self, x, y, category):
         self.x = x
         self.y = y
@@ -221,11 +230,14 @@ class Bonus(Entity):
         self.speed = scrolling_speed
 
     def update(self, deltatime):
+        """ update position and angle """
         self.angle += angle_incr * deltatime
         self.speed -= (scrolling_speed/50000.)*deltatime
         self.x += (self.speed - scrolling_speed)*deltatime
 
 class Enemy(Entity):
+    """ An entity at a position, moving with a pattern
+    """
     def __init__(self, x, y, movepattern, skin):
         Entity.__init__(self, x, y, skin)
         self.movepattern = movepattern
@@ -235,6 +247,8 @@ class Enemy(Entity):
         self.angle = 0
 
     def hit(self, points):
+        """ Decrease life of points
+        """
         self.life -= points
 
     def update(self, deltatime):
@@ -243,10 +257,12 @@ class Enemy(Entity):
         self.y += self.movepattern.get_vector(self.time)[1] * deltatime
 
 class Bullet(Entity):
+    """ An entity to attack others.
+    """
     def __init__(self, x, y, angle):
         Entity.__init__(self, x, y, 'bullet.png')
         self.angle = angle
-        self.speed = 11
+        self.speed = scrolling_speed * 1.1
 
     def update(self, deltatime):
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
@@ -254,6 +270,8 @@ class Bullet(Entity):
 
 
 class Plane(Entity):
+    """ The entity controlled by the player.
+    """
     def __init__(self):
         self.speed = 10
         self.x = 100
@@ -268,21 +286,33 @@ class Plane(Entity):
         self.armor = 0
 
     def up(self, deltatime):
+        """ direct plane up in the sky.
+        """
         self.angle -= angle_incr * deltatime
 
     def down(self, deltatime):
+        """ push plane down to the flor.
+        """
         self.angle += angle_incr * deltatime
 
     def aim_up(self, deltatime):
+        """ direct gun upper.
+        """
         self.aim_angle -= angle_incr * deltatime
 
     def aim_down(self, deltatime):
+        """ direct gun lower.
+        """
         self.aim_angle += angle_incr * deltatime
 
     def fire(self):
+        """ fire the gun.
+        """
         self.bullets.add(Bullet(self.x, self.y, self.angle + self.aim_angle))
 
     def scnd_fire(self):
+        """ fire the second gun
+        """
         if self.scnd_weapon[0] == 'bomb':
             self.bomb()
 
@@ -292,6 +322,8 @@ class Plane(Entity):
         Entity.display(self, screen)
 
     def update(self, deltatime, level):
+        """ Update physics of the plane and its bullets.
+        """
         self.angle += angle_incr/5 * deltatime
         self.angle = max(-500 * angle_incr, min(2000 * angle_incr, self.angle))
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
@@ -310,6 +342,8 @@ class Plane(Entity):
         self.bullets.difference_update(to_remove)
 
     def get_bonus(self, bonus):
+        """ Handle the catching of a bonus.
+        """
         if bonus.category == 'life':
             self.life += 50
         elif bonus.category == 'bomb':
@@ -408,7 +442,7 @@ def main():
         plane.bullets.difference_update(bullets_to_remove)
         level.enemies.difference_update(enemies_to_remove)
 
-        # display
+        # update display
         level.display(screen)
         plane.display(screen)
         for i in bonuses:
