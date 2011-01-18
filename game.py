@@ -66,6 +66,18 @@ class Level(object):
         pixels is only proportional to the size of image, not equal to the
         number of pixels in the image. (but tests show it's enought for our use
         case)
+
+        tested pixel in a example square:
+         _________________
+        |   .    .    .   |
+        |.................|
+        |   .    .    .   |
+        |.................|
+        |   .    .    .   |
+        |.................|
+        |___.____.____.___|
+
+        4*h + 4*w - 16 pixels tested, for any h and w
         """
         #load the two current displayed images of the level
         img = (
