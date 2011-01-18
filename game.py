@@ -57,36 +57,39 @@ class Level(object):
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
 
-    def collide(self, plane):
+    def collide(self, entity):
         img = (
             loaders.image(self.foreground_base+str(int(self.x/1000))+'.png'),
             loaders.image(self.foreground_base+str(int(self.x/1000)+1)+'.png')
             )
 
-        clipped = plane.pos_rect().move(self.x, 0)
+        clipped = entity.pos_rect().move(self.x, 0)
 
-        for x in range(0, clipped.width, 8):
-            for y in range(0, clipped.height, 8):
+        for x in range(0, clipped.width, clipped.width/4):
+            for y in range(0, clipped.height, clipped.width/4):
                 # manage case where we are on the next tile
-                #print int(plane.x + x + (self.x % 1000)), int(plane.y + y)
-                if (plane.x +x < -(self.x % 1000)+1000):
+                try:
                     if (
-                        plane.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
-                        img[0][0].get_at((
-                            int(plane.x + x + (self.x % 1000)),
-                            int(plane.y + y)
-                            )) != (255, 255, 255, 0)
+                            (entity.x + x < -(self.x % 1000)+1000) and
+                            entity.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                            img[0][0].get_at((
+                                    int(entity.x + x + (self.x % 1000)),
+                                    int(entity.y + y)
+                                    )) != (255, 255, 255, 0)
                        ):
                         return True
-                else:
-                    if (
-                        plane.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
-                        img[1][0].get_at((
-                            int(plane.x + x + (self.x % 1000) - 1000),
-                            int(plane.y + y)
-                            )) != (255, 255, 255, 0)
-                       ):
+                    elif (
+                            entity.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                            img[1][0].get_at((
+                                    int(entity.x + x + (self.x % 1000) - 1000),
+                                    int(entity.y + y)
+                                    )) != (255, 255, 255, 0)
+                         ):
                         return True
+                except IndexError,e:
+                    #FIXME: find WHY!
+                    pass
+
         return False
 
     def display(self, screen):
@@ -137,6 +140,10 @@ class Entity(object):
         self.y = y
         self.skin = skin
 
+    def pos_rect(self):
+        """ returns the rect of the current image, at the current position """
+        return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
+
     def collide(self, entity):
         clipped = pygame.Rect(
             (self.x, self.y), loaders.image(self.skin)[1][2:]
@@ -146,6 +153,7 @@ class Entity(object):
                     loaders.image(entity.skin)[1][2:]
                     )
                 )
+
         for x in range(clipped.width):
             for y in range(clipped.height):
                 if (
@@ -232,10 +240,6 @@ class Plane(Entity):
     def up(self, deltatime):
         self.angle -= angle_incr * deltatime
 
-    def pos_rect(self):
-        """ returns the rect of the current image, at the current position """
-        return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
-
     def down(self, deltatime):
         self.angle += angle_incr * deltatime
 
@@ -257,7 +261,7 @@ class Plane(Entity):
             bullet.display(screen)
         Entity.display(self, screen)
 
-    def update(self, deltatime):
+    def update(self, deltatime, level):
         self.angle += angle_incr/5 * deltatime
         self.angle = max(-500 * angle_incr, min(2000 * angle_incr, self.angle))
         self.x += (math.cos(self.angle)*self.speed - scrolling_speed)*deltatime
@@ -269,6 +273,8 @@ class Plane(Entity):
         for bullet in self.bullets:
             bullet.update(deltatime)
             if bullet.x > 1000:
+                to_remove.add(bullet)
+            elif level.collide(bullet):
                 to_remove.add(bullet)
 
         self.bullets.difference_update(to_remove)
@@ -328,7 +334,7 @@ def main():
             plane.fire()
 
         # update
-        plane.update(deltatime)
+        plane.update(deltatime, level)
         level.update(deltatime)
         enemies_to_remove = set()
         bullets_to_remove = set()
