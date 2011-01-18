@@ -67,15 +67,16 @@ class Level(object):
         number of pixels in the image. (but tests show it's enought for our use
         case)
         """
+        #load the two current displayed images of the level
         img = (
             loaders.image(self.foreground_base+str(int(self.x/1000))+'.png'),
             loaders.image(self.foreground_base+str(int(self.x/1000)+1)+'.png')
             )
-
+        #place entity at its real place on level
         clipped = entity.pos_rect().move(self.x, 0)
 
         for x in range(0, clipped.width, clipped.width/4):
-            for y in range(0, clipped.height, clipped.width/4):
+            for y in range(0, clipped.height, clipped.height/4):
                 # manage case where we are on the next tile
                 try:
                     if (
