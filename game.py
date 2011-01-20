@@ -94,14 +94,14 @@ class Level(object):
                 try:
                     if (
                             (entity.x + x < -(self.x % 1000)+1000) and
-                            entity.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                            entity.image[0].get_at((x,y)) != (255, 255, 255, 0) and
                             img[0][0].get_at((
                                     int(entity.x + x + (self.x % 1000)),
                                     int(entity.y + y)
                                     )) != (255, 255, 255, 0)):
                         return True
                     elif (
-                            entity.image()[0].get_at((x,y)) != (255, 255, 255, 0) and
+                            entity.image[0].get_at((x,y)) != (255, 255, 255, 0) and
                             img[1][0].get_at((
                                     int(entity.x + x + (self.x % 1000) - 1000),
                                     int(entity.y + y)
@@ -118,6 +118,7 @@ class Level(object):
         """ Display the current two images chunk of the level using current x
         """
         screen.blit(loaders.image(self.background)[0], (0, 0))
+
         screen.blit(
             loaders.image(
                 self.foreground_base+str(int(self.x/1000))+'.png'
@@ -165,36 +166,31 @@ class Entity(object):
     def __init__(self, x, y, skin):
         self.x = x
         self.y = y
+        self.angle = 0
         self.skin = skin
 
     def pos_rect(self):
         """ returns the rect of the current image, at the current position
         """
-        return pygame.Rect((self.x, self.y), loaders.image(self.skin)[1][2:])
+        return pygame.Rect((self.x, self.y), self.image[1][2:])
 
     def collide(self, entity):
         """ pixel perfect collision between two entities
         """
         # reduce tested zone to overlap of the two rects
-        clipped = pygame.Rect(
-            (self.x, self.y), loaders.image(self.skin)[1][2:]
-            ).clip(
-                pygame.Rect(
-                    (entity.x, entity.y),
-                    loaders.image(entity.skin)[1][2:]
-                    )
-                )
+        clipped = pygame.Rect((self.x, self.y), self.image[1][2:]
+            ).clip(pygame.Rect((entity.x, entity.y), self.image[1][2:]))
 
         for x in range(clipped.width):
             for y in range(clipped.height):
                 # return true if pixels in both images at x,y in the clipping
                 # rect have a non transparent color
                 if (
-                    self.image()[0].get_at((
+                    self.image[0].get_at((
                         clipped.x - int(self.x) + x,
                         clipped.y - int(self.y) + y
                         )) != (255, 255, 255, 0) and
-                    entity.image()[0].get_at((
+                    entity.image[0].get_at((
                         clipped.x - int(entity.x) + x,
                         clipped.y - int(entity.y) + y
                         )) != (255, 255, 255, 0)
@@ -202,6 +198,12 @@ class Entity(object):
                     return True
         return False
 
+    def hit(self, points):
+        """ Decrease life of points
+        """
+        self.life -= points
+
+    @property
     def image(self):
         """ Return the image currently displayed by the engine for the entity.
         """
@@ -214,7 +216,7 @@ class Entity(object):
         """ display the current image, at the current coordinates.
         """
         screen.blit(
-            self.image()[0],
+            self.image[0],
             (self.x, self.y)
         )
 
@@ -235,6 +237,56 @@ class Bonus(Entity):
         self.speed -= (scrolling_speed/50000.)*deltatime
         self.x += (self.speed - scrolling_speed)*deltatime
 
+class particle(Entity):
+    def __init__(self, time, x, y, angle, speed):
+        self.time = time
+        self.x = x
+        self.y = y
+        self.angle = 0
+        self.d_angle = angle
+        self.speed = speed
+        self.time = 0
+        self.skin = 'particle.png'
+
+    def update(self, deltatime):
+        self.time += deltatime
+        self.x += math.cos(self.d_angle) * speed * deltatime
+        self.y += math.sin(self.d_angle) * speed * deltatime
+        self.speed -= deltatime * self.speed
+
+class Explosion(object):
+    def __init__(self, x, y, size=100):
+        self.x = x
+        self.y = y
+        self.time = size
+        self.particle = set()
+
+    def update(self, deltatime):
+        self.time -= deltatime
+        if self.time > 0:
+            self.particles.add(
+                particle(
+                    self.time,
+                    self.x,
+                    self.y,
+                    random.rand()*2*math.pi,
+                    size/10.)
+                )
+
+        to_remove = set()
+        for p in self.particles:
+            if p.time > size:
+                to_remove.add(p)
+        self.particles.difference_update(to_remove)
+
+    @property
+    def dead(self):
+        return self.time < 0 and len(self.particles) == 0
+
+    def display(self, screen):
+        for p in self.particles:
+            p.display(screen)
+
 class Enemy(Entity):
     """ An entity at a position, moving with a pattern
     """
@@ -245,11 +297,6 @@ class Enemy(Entity):
         self.time = 0
         self.life = 10
         self.angle = 0
-
-    def hit(self, points):
-        """ Decrease life of points
-        """
-        self.life -= points
 
     def update(self, deltatime):
         self.time += deltatime
@@ -310,6 +357,10 @@ class Plane(Entity):
         """
         self.bullets.add(Bullet(self.x, self.y, self.angle + self.aim_angle))
 
+    def bomb(self):
+        pass
+        #self.
+
     def scnd_fire(self):
         """ fire the second gun
         """
@@ -365,6 +416,8 @@ def main():
         'life',
         'armor',
     )
+
+    explosions = set()
 
     clock = pygame.time.Clock()
     while not quit:
@@ -424,10 +477,21 @@ def main():
 
         for enemy in level.enemies:
             enemy.update(deltatime)
+            if enemy.collide(plane):
+                plane.hit(20)
+                enemies_to_remove.add(enemy)
+                continue
             for bullet in plane.bullets:
                 if bullet.collide(enemy):
                     enemy.hit(1)
                     if enemy.life <= 0:
+                        #explosions.add(
+                            #Explosion(
+                                    #enemy.x,
+                                    #enemy.y,
+                                #)
+                            #)
+
                         enemies_to_remove.add(enemy)
                         if random.randint(0,6) == 6:
                             bonuses.add(
@@ -441,6 +505,12 @@ def main():
                     bullets_to_remove.add(bullet)
         plane.bullets.difference_update(bullets_to_remove)
         level.enemies.difference_update(enemies_to_remove)
+        to_remove = set()
+
+        for e in explosions:
+            if e.dead:
+                to_remove.add(e)
+        explosions.difference_update(to_remove)
 
         # update display
         level.display(screen)
@@ -448,6 +518,8 @@ def main():
         for i in bonuses:
             i.display(screen)
         for i in level.enemies:
+            i.display(screen)
+        for i in explosions:
             i.display(screen)
 
         screen.blit(
