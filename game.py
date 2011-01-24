@@ -6,6 +6,7 @@ import os
 import math
 import itertools
 import random
+import configobj
 import pygame
 from pygame.locals import *
 
