@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
+from __future__ import division
+
 import os
 import math
 import itertools
@@ -88,8 +90,8 @@ class Level(object):
         #place entity at its real place on level
         clipped = entity.pos_rect().move(self.x, 0)
 
-        for x in range(0, clipped.width, clipped.width/4):
-            for y in range(0, clipped.height, clipped.height/4):
+        for x in range(0, clipped.width, clipped.width//4):
+            for y in range(0, clipped.height, clipped.height//4):
                 # manage case where we are on the next tile
                 try:
                     if (
@@ -242,40 +244,43 @@ class particle(Entity):
         self.time = time
         self.x = x
         self.y = y
-        self.angle = 0
+        self.angle = angle
         self.d_angle = angle
         self.speed = speed
         self.time = 0
-        self.skin = 'particle.png'
+        self.skin = 'bullet.png'
 
     def update(self, deltatime):
         self.time += deltatime
-        self.x += math.cos(self.d_angle) * speed * deltatime
-        self.y += math.sin(self.d_angle) * speed * deltatime
-        self.speed -= deltatime * self.speed
+        self.x += math.cos(self.d_angle) * self.speed * deltatime
+        self.y += math.sin(self.d_angle) * self.speed * deltatime
+        #self.speed -= deltatime * self.speed
 
 class Explosion(object):
     def __init__(self, x, y, size=100):
         self.x = x
         self.y = y
         self.time = size
-        self.particle = set()
+        self.size = size
+        self.particles = set()
 
     def update(self, deltatime):
         self.time -= deltatime
         if self.time > 0:
-            self.particles.add(
-                particle(
-                    self.time,
-                    self.x,
-                    self.y,
-                    random.rand()*2*math.pi,
-                    size/10.)
-                )
+            for i in range(100):
+                self.particles.add(
+                    particle(
+                        self.time,
+                        self.x,
+                        self.y,
+                        (random.randint(0, 100)/100)*2*math.pi,
+                        0.01)
+                    )
 
         to_remove = set()
         for p in self.particles:
-            if p.time > size:
+            p.update(deltatime)
+            if p.time > 1500:
                 to_remove.add(p)
         self.particles.difference_update(to_remove)
 
@@ -453,8 +458,6 @@ def main():
         # update
         plane.update(deltatime, level)
         level.update(deltatime)
-        enemies_to_remove = set()
-        bullets_to_remove = set()
 
         if level.collide(plane):
             plane.life -= 1
@@ -473,24 +476,37 @@ def main():
                 plane.get_bonus(bonus)
                 to_remove.add(bonus)
 
+        for explosion in explosions:
+            explosion.update(deltatime)
+
         bonuses.difference_update(to_remove)
 
+        bullets_to_remove = set()
+        enemies_to_remove = set()
         for enemy in level.enemies:
             enemy.update(deltatime)
             if enemy.collide(plane):
                 plane.hit(20)
+                explosions.add(
+                    Explosion(
+                            enemy.x,
+                            enemy.y,
+                            500,
+                        )
+                    )
                 enemies_to_remove.add(enemy)
                 continue
             for bullet in plane.bullets:
                 if bullet.collide(enemy):
                     enemy.hit(1)
                     if enemy.life <= 0:
-                        #explosions.add(
-                            #Explosion(
-                                    #enemy.x,
-                                    #enemy.y,
-                                #)
-                            #)
+                        explosions.add(
+                            Explosion(
+                                    enemy.x,
+                                    enemy.y,
+                                    500,
+                                )
+                            )
 
                         enemies_to_remove.add(enemy)
                         if random.randint(0,6) == 6:
