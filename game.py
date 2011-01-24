@@ -178,8 +178,8 @@ class Entity(object):
         """ pixel perfect collision between two entities
         """
         # reduce tested zone to overlap of the two rects
-        clipped = pygame.Rect((self.x, self.y), self.image[1][2:]
-            ).clip(pygame.Rect((entity.x, entity.y), self.image[1][2:]))
+        clipped = pygame.Rect((self.x, self.y), self.image[1][2:]).clip(
+                pygame.Rect((entity.x, entity.y), entity.image[1][2:]))
 
         for x in range(clipped.width):
             for y in range(clipped.height):
