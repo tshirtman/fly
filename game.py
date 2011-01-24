@@ -254,6 +254,7 @@ class particle(Entity):
         self.time += deltatime
         self.x += math.cos(self.d_angle) * self.speed * deltatime
         self.y += math.sin(self.d_angle) * self.speed * deltatime
+        self.x -= scrolling_speed/100. * deltatime
         #self.speed -= deltatime * self.speed
 
 class Explosion(object):
@@ -267,7 +268,7 @@ class Explosion(object):
     def update(self, deltatime):
         self.time -= deltatime
         if self.time > 0:
-            for i in range(100):
+            for i in range(20):
                 self.particles.add(
                     particle(
                         self.time,
@@ -348,7 +349,7 @@ class Plane(Entity):
         self.angle += angle_incr * deltatime
 
     def aim_up(self, deltatime):
-        """ direct gun upper.
+        """ direct gun higher.
         """
         self.aim_angle -= angle_incr * deltatime
 
@@ -387,15 +388,6 @@ class Plane(Entity):
         self.x = max(0, min(600, self.x))
         self.y = max(0, min(480, self.y))
 
-        to_remove = set()
-        for bullet in self.bullets:
-            bullet.update(deltatime)
-            if bullet.x > 1000:
-                to_remove.add(bullet)
-            elif level.collide(bullet):
-                to_remove.add(bullet)
-
-        self.bullets.difference_update(to_remove)
 
     def get_bonus(self, bonus):
         """ Handle the catching of a bonus.
@@ -480,6 +472,17 @@ def main():
             explosion.update(deltatime)
 
         bonuses.difference_update(to_remove)
+
+        bullets_to_remove = set()
+        for bullet in plane.bullets:
+            bullet.update(deltatime)
+            if bullet.x > 1000:
+                to_remove.add(bullet)
+            elif level.collide(bullet):
+                to_remove.add(bullet)
+                explosions.add(Explosion(bullet.x, bullet.y, 50))
+
+        plane.bullets.difference_update(to_remove)
 
         bullets_to_remove = set()
         enemies_to_remove = set()
