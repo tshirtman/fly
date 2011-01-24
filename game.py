@@ -7,6 +7,7 @@ import math
 import itertools
 import random
 import configobj
+import re
 import pygame
 from pygame.locals import *
 
@@ -15,47 +16,26 @@ import loaders
 scrolling_speed = 10
 angle_incr = 0.0001
 
+levels = configobj.ConfigObj('levels.cfg')
+
 class Level(object):
     def __init__(self, num):
         self.debug = True
-        self.x = 0
-        self.background = 'lvl1_background.png'
-        self.foreground_base = 'lvl1_foreground_'
+        if "lvl"+str(num) in levels:
+            lvl = levels['lvl'+str(num)]
+            self.x = 0
+            self.background = lvl['background']
+            self.foreground_base = lvl['foreground_base']
 
-        self.enemies = set()
-        self.enemies.add(Enemy(500, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(600, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(500, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(600, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(550, 200, MovePatern('square'), 'enemy1.png'))
-
-        self.enemies.add(Enemy(800, 100, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(950, 200, MovePatern('down'), 'enemy2.png'))
-
-        self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(1600, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(1500, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(1600, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(1550, 200, MovePatern('square'), 'enemy1.png'))
-
-        self.enemies.add(Enemy(1800, 100, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(1950, 200, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(1500, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
-
-        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(2500, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2600, 300, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2500, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2600, 100, MovePatern('square'), 'enemy1.png'))
-        self.enemies.add(Enemy(2550, 200, MovePatern('square'), 'enemy1.png'))
-
-        self.enemies.add(Enemy(2800, 100, MovePatern('down'), 'enemy2.png'))
-        self.enemies.add(Enemy(2950, 200, MovePatern('down'), 'enemy2.png'))
+            self.enemies = set()
+            for e in lvl['enemies'].split('\n'):
+                e = e.strip()
+                if e == '': continue
+                a = re.compile(' *, *')
+                x, y, pattern, skin = a.split(e)
+                self.enemies.add(
+                        Enemy(int(x), int(y), MovePatern(pattern), skin)
+                        )
 
     def update(self, deltatime):
         self.x += scrolling_speed/100.0 * deltatime
@@ -139,9 +119,9 @@ class MovePatern(object):
         always a vector to follow.
     """
     def __init__(self, name):
-        self.name = name
+        self.name = name.strip()
 
-        if name == 'square':
+        if self.name == 'square':
             self.duration = 8000
             self.vectors = [
                 (0, (-.1, 0)),
@@ -149,12 +129,14 @@ class MovePatern(object):
                 (4000, (.05, 0)),
                 (6000, (0, -.1)),]
 
-        elif name == 'down':
+        elif self.name == 'down':
             self.duration = 6000
             self.vectors = [
                 (0, (-.1, 0)),
                 (2000, (-.1, .1)),
                 (4000, (0, -.1)),]
+        else:
+            raise ValueError('"'+name+'" not a valid pattern name')
 
     def get_vector(self, t):
         """ Return the vector to use for time t
