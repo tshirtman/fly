@@ -231,14 +231,23 @@ class particle(Entity):
         self.d_angle = angle
         self.speed = speed
         self.time = 0
-        self.skin = 'bullet.png'
+        self.skin = 'particle1.png'
 
     def update(self, deltatime):
         self.time += deltatime
         self.x += math.cos(self.d_angle) * self.speed * deltatime
         self.y += math.sin(self.d_angle) * self.speed * deltatime
         self.x -= scrolling_speed/100. * deltatime
+        # FIXME: lots of hardcoded values around here!
+        if self.time > 300: self.skin = 'particle.png'
         #self.speed -= deltatime * self.speed
+
+    def display(self, screen):
+        img = self.image[0]
+        img.set_alpha((500 - self.time)/500.)
+        img.set_alpha(0)
+        screen.blit(img, (self.x, self.y))
+
 
 class Explosion(object):
     def __init__(self, x, y, size=100):
@@ -251,7 +260,7 @@ class Explosion(object):
     def update(self, deltatime):
         self.time -= deltatime
         if self.time > 0:
-            for i in range(20):
+            for i in range(5):
                 self.particles.add(
                     particle(
                         self.time,

@@ -142,11 +142,7 @@ def image(name, *args, **kwargs):
         except pygame.error, message:
             logging.debug('Cannot load image:'+str(name), 2)
             raise# SystemExit, message
-        if 'colorkey' not in kwargs or kwargs['colorkey'] is None:
-            img = img.convert_alpha()
-        if 'colorkey' in kwargs and kwargs['colorkey'] is not None:
-            img = img.convert()
-            img.set_colorkey(colorkey, RLEACCEL)
+        img = img.convert_alpha()
     return img, img.get_rect()
 
 @memoize
