@@ -239,7 +239,8 @@ class particle(Entity):
         self.y += math.sin(self.d_angle) * self.speed * deltatime
         self.x -= scrolling_speed/100. * deltatime
         # FIXME: lots of hardcoded values around here!
-        if self.time > 300: self.skin = 'particle.png'
+        if self.time > 200: self.skin = 'particle2.png'
+        if self.time > 400: self.skin = 'particle.png'
         #self.speed -= deltatime * self.speed
 
     def display(self, screen):
