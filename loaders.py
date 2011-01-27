@@ -27,10 +27,14 @@ import logging
 import math
 
 try:
-    from pygame.locals import BLEND_MAX
+    from pygame.locals import BLEND_RGBA_MAX
+    from pygame.locals import BLEND_RGBA_ADD
+    from pygame.locals import BLEND_RGBA_SUB
+    from pygame.locals import BLEND_RGBA_MULT
+    from pygame.locals import BLEND_RGBA_MIN
 except:
-    Log().log("old version of pygame no BLEND_MAX")
-    BLEND_MAX = None
+    Log().log("old version of pygame no BLEND_RGBA_MAX")
+    BLEND_RGBA_MAX = None
 
 def memoize(function):
     """
@@ -79,17 +83,31 @@ def image(name, *args, **kwargs):
         #logging.debug('lightened: '+name)
         kwargs['lighten'] = False
         img = image(name, *args, **kwargs)[0].copy()
-        if BLEND_MAX is not None:
+        if BLEND_RGBA_MAX is not None:
             img.fill(
                     pygame.Color('lightgrey'),
                     None,
-                    BLEND_MAX
+                    BLEND_RGBA_MAX
                     )
         else:
            # this mean this version of pygame is to old to use the effect
            # above, an equivalent method would be a good thing
            logging.warning('pygame version < 1.9 no alpha blend.')
            pass #nothing for the moment 
+
+    elif 'alpha' in kwargs and kwargs['alpha'] is not None:
+        alpha = kwargs['alpha']
+        if not 0 <= alpha <= 1:
+            logging.warning('bad alpha value: %s' % alpha)
+            alpha = min(1, max(0, alpha))
+
+        kwargs['alpha'] = None
+        img = image(name, *args, **kwargs)[0].copy()
+        img.fill(
+                pygame.Color(255, 255, 255, int(alpha*255)),
+                image(name, *args, **kwargs)[1],
+                BLEND_RGBA_MULT
+                )
 
     elif 'scale' in kwargs and kwargs['scale'] is not None:
         if len(kwargs['scale']) is not 2:

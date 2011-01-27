@@ -244,10 +244,13 @@ class particle(Entity):
         #self.speed -= deltatime * self.speed
 
     def display(self, screen):
-        img = self.image[0]
-        img.set_alpha((500 - self.time)/500.)
-        img.set_alpha(0)
-        screen.blit(img, (self.x, self.y))
+        screen.blit(
+                loaders.image(
+                    self.skin,
+                    alpha=(1500 - self.time)/1500.
+                    )[0],
+                (self.x, self.y),
+                )
 
 
 class Explosion(object):
