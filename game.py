@@ -193,7 +193,7 @@ class Entity(object):
         """ Return the image currently displayed by the engine for the entity.
         """
         return loaders.image(
-                self.skin,
+                os.path.join('skins', self.skin),
                 rotate=-self.angle*5
                 )
 
@@ -246,7 +246,7 @@ class particle(Entity):
     def display(self, screen):
         screen.blit(
                 loaders.image(
-                    self.skin,
+                    os.path.join('skins', self.skin),
                     alpha=(1500 - self.time)/1500.
                     )[0],
                 (self.x, self.y),
