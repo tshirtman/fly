@@ -9,11 +9,15 @@ Game
 ====
 
 The game feature a plane with two people on board, a pilot and a shooter,
-grossely definied enemies, and mountains, when you can crash if you are not
+grossely definied enemies, and mountains, where you can crash if you are not
 careful.
 
 Collisions are pixel perfect (or some approximation of it ;)) and there are
 nice smoke/fire effects when they occure.
+
+Controls are the arrow keys for direction, space to shoot, and q and d to aim
+higher/lower.
+
 
 Customisation
 =============
